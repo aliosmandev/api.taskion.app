@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -28,7 +27,6 @@ type NotionTokenResponse struct {
 }
 
 func Authorize(c *fiber.Ctx) error {
-	fmt.Println(os.Getenv("NOTION_AUTHORIZE_URL"))
 	base, err := url.Parse(os.Getenv("NOTION_AUTHORIZE_URL"))
 	if err != nil {
 		return c.JSON(500, "error")
@@ -45,18 +43,24 @@ func Authorize(c *fiber.Ctx) error {
 }
 
 func Callback(c *fiber.Ctx) error {
-
 	var code string = c.Query("code")
 
 	var postUrl string = "https://api.notion.com/v1/oauth/token"
 
-	body := []byte(`{
-		"grant_type": "authorization_code",
-		"code": "` + code + `",
-		"redirect_uri": "` + os.Getenv("NOTION_REDIRECT_URI") + `"
-	}`)
+	payload := NotionTokenPayload{
+		GrantType:   "authorization_code",
+		Code:        code,
+		RedirectUri: os.Getenv("NOTION_REDIRECT_URI"),
+	}
 
-	r, err := http.NewRequest("POST", postUrl, bytes.NewBuffer(body))
+	payloadJson, err := json.Marshal(payload)
+	if err != nil {
+		return c.JSON(500, "error")
+	}
+
+	buffer := bytes.NewBuffer(payloadJson)
+
+	r, err := http.NewRequest("POST", postUrl, buffer)
 	if err != nil {
 		return c.JSON(500, "error")
 	}
@@ -80,10 +84,14 @@ func Callback(c *fiber.Ctx) error {
 	}
 
 	var tokenResponse NotionTokenResponse
+
 	if err := json.NewDecoder(res.Body).Decode(&tokenResponse); err != nil {
 		return c.Status(500).JSON("error decoding response")
 	}
 
-	// Token alındı, şimdi token'ı kullanabilirsiniz
-	return c.Status(200).JSON(tokenResponse)
+	// var url = "http://localhost:5173/?accessToken=" + tokenResponse.AccessToken
+
+	return c.JSON(tokenResponse)
+
+	// return c.Redirect(url)
 }
