@@ -1,4 +1,4 @@
-module go-rest-api
+module taskmanager
 
 go 1.22.5
 

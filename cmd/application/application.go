@@ -3,7 +3,7 @@ package application
 import (
 	"github.com/gofiber/fiber/v2"
 
-	authRoutes "go-rest-api/modules/auth"
+	authRoutes "taskmanager/modules/auth"
 )
 
 func Start() {

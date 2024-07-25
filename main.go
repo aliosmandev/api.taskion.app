@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"go-rest-api/cmd/application"
+	"taskmanager/cmd/application"
 
 	"github.com/joho/godotenv"
 )
