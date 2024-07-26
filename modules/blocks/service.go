@@ -1,7 +1,6 @@
-package pages
+package blocks
 
 import (
-	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -18,24 +17,13 @@ type Sort struct {
 	Timestamp string `json:"timestamp"`
 }
 
-func getPages(c *fiber.Ctx) error {
-	var postUrl string = "https://api.notion.com/v1/search"
+func getBlocks(c *fiber.Ctx) error {
 
-	payload := NotionSearchPayload{
-		Sort: Sort{
-			Direction: "ascending",
-			Timestamp: "last_edited_time",
-		},
-	}
+	var pageId string = c.Params("pageId")
 
-	payloadJson, err := json.Marshal(payload)
-	if err != nil {
-		return c.JSON(500, "error")
-	}
+	var getUrl string = "https://api.notion.com/v1/blocks/" + pageId + "/children?page_size=100"
 
-	buffer := bytes.NewBuffer(payloadJson)
-
-	r, err := http.NewRequest("POST", postUrl, buffer)
+	r, err := http.NewRequest("GET", getUrl, nil)
 	if err != nil {
 		return c.JSON(500, "error")
 	}

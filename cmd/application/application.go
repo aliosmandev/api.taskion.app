@@ -1,19 +1,30 @@
 package application
 
 import (
+	"os"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 
 	authRoutes "taskmanager/modules/auth"
+	blocksRoutes "taskmanager/modules/blocks"
 	pagesRoutes "taskmanager/modules/pages"
 )
 
 func Start() {
 	app := fiber.New()
+	app.Use(cors.New(cors.Config{
+		AllowCredentials: true,
+		AllowOrigins:     os.Getenv("UI_URL"),
+	}))
 	authGroup := app.Group("/auth")
 	authRoutes.InitRouter(authGroup)
 
 	pagesGroup := app.Group("/pages")
 	pagesRoutes.InitRouter(pagesGroup)
+
+	blocksGroup := app.Group("/blocks")
+	blocksRoutes.InitRouter(blocksGroup)
 
 	app.Listen(":8080")
 }

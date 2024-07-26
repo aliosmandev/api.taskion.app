@@ -42,6 +42,45 @@ func Authorize(c *fiber.Ctx) error {
 	return c.Redirect(base.String())
 }
 
+func Me(c *fiber.Ctx) error {
+
+	var getUrl string = "https://api.notion.com/v1/users"
+
+	r, err := http.NewRequest("GET", getUrl, nil)
+	if err != nil {
+		return c.JSON(500, "error")
+	}
+
+	Authorization := c.GetReqHeaders()["Authorization"]
+	accessToken := Authorization[len(Authorization)-1][7:]
+
+	r.Header.Set("Content-Type", "application/json")
+	r.Header.Set("Authorization", "Bearer "+accessToken)
+	r.Header.Set("Notion-Version", "2022-02-22")
+
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		return c.JSON(500, "error")
+	}
+	defer res.Body.Close()
+
+	bodyBytes, _ := io.ReadAll(res.Body)
+
+	if res.StatusCode != http.StatusOK {
+		return c.Status(res.StatusCode).JSON(string(bodyBytes))
+	}
+
+	var responseBody map[string]interface{}
+
+	err = json.Unmarshal(bodyBytes, &responseBody)
+	if err != nil {
+		return c.JSON(500, "error")
+	}
+
+	return c.JSON(responseBody)
+}
+
 func Callback(c *fiber.Ctx) error {
 	var code string = c.Query("code")
 
@@ -89,9 +128,7 @@ func Callback(c *fiber.Ctx) error {
 		return c.Status(500).JSON("error decoding response")
 	}
 
-	// var url = "http://localhost:5173/?accessToken=" + tokenResponse.AccessToken
+	var url = os.Getenv("UI_URL") + "/callback?accessToken=" + tokenResponse.AccessToken
 
-	return c.JSON(tokenResponse)
-
-	// return c.Redirect(url)
+	return c.Redirect(url)
 }
