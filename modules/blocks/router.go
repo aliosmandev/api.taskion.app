@@ -5,5 +5,6 @@ import (
 )
 
 func InitRouter(router fiber.Router) {
-	router.Get("/get/:pageId", getBlocks)
+	router.Get("/:pageId", getBlocks)
+	router.Post("/addTodo/:pageId", AddTodo)
 }
