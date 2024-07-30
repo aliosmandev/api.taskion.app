@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 
 	authRoutes "taskmanager/modules/auth"
 	blocksRoutes "taskmanager/modules/blocks"
@@ -17,6 +18,8 @@ func Start() {
 		AllowCredentials: true,
 		AllowOrigins:     os.Getenv("UI_URL"),
 	}))
+	app.Use(recover.New())
+
 	authGroup := app.Group("/auth")
 	authRoutes.InitRouter(authGroup)
 
