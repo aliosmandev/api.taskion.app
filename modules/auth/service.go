@@ -114,7 +114,7 @@ func Callback(c *fiber.Ctx) error {
 		return c.Status(500).JSON("error decoding response")
 	}
 
-	var url = os.Getenv("UI_URL") + "/callback?accessToken=" + tokenResponse.AccessToken
+	var url = os.Getenv("APP_URL") + "callback?accessToken=" + tokenResponse.AccessToken
 
 	return c.Redirect(url)
 }
