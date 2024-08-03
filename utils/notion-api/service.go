@@ -11,22 +11,30 @@ import (
 )
 
 func HttpRequest(c *fiber.Ctx, url string, payload interface{}, method string) (map[string]interface{}, error) {
-	payloadJson, err := json.Marshal(payload)
-	if err != nil {
-		return nil, c.Status(500).JSON(fiber.Map{"error": "Failed to marshal payload"})
+	var buffer *bytes.Buffer
+	if payload != nil {
+		payloadJson, err := json.Marshal(payload)
+		if err != nil {
+			return nil, c.Status(500).JSON(fiber.Map{"error": "Failed to marshal payload"})
+		}
+		buffer = bytes.NewBuffer(payloadJson)
 	}
 
-	buffer := bytes.NewBuffer(payloadJson)
+	var r *http.Request
+	var err error
+	if buffer != nil {
+		r, err = http.NewRequest(method, url, buffer)
+	} else {
+		r, err = http.NewRequest(method, url, nil)
+	}
 
-	fmt.Println(url, method)
-
-	r, err := http.NewRequest(method, url, buffer)
 	if err != nil {
 		return nil, c.Status(500).JSON(fiber.Map{"error": "Failed to create request"})
 	}
 
 	Authorization := c.GetReqHeaders()["Authorization"]
 	accessToken := Authorization[len(Authorization)-1][7:]
+	println(accessToken, "access token")
 
 	r.Header.Set("Content-Type", "application/json")
 	r.Header.Set("Authorization", "Bearer "+accessToken)
@@ -39,16 +47,19 @@ func HttpRequest(c *fiber.Ctx, url string, payload interface{}, method string) (
 	}
 	defer res.Body.Close()
 
-	bodyBytes, _ := io.ReadAll(res.Body)
+	bodyBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, c.Status(500).JSON(fiber.Map{"error": "Failed to read response body"})
+	}
 
 	if res.StatusCode != http.StatusOK {
 		return nil, c.Status(res.StatusCode).JSON(fiber.Map{"error": string(bodyBytes)})
 	}
 
 	var responseBody map[string]interface{}
-
 	err = json.Unmarshal(bodyBytes, &responseBody)
 	if err != nil {
+		fmt.Println(err)
 		return nil, c.Status(500).JSON(fiber.Map{"error": "Failed to unmarshal response"})
 	}
 
