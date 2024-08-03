@@ -59,7 +59,7 @@ func createBlock(c *fiber.Ctx) error {
 		},
 	})
 
-	var responseBody, _ = notionapi.HttpRequest(c, postUrl, requestPayload, "POST")
+	var responseBody, _ = notionapi.HttpRequest(c, postUrl, requestPayload, "PATCH")
 
 	return c.JSON(responseBody)
 }

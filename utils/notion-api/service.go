@@ -34,7 +34,6 @@ func HttpRequest(c *fiber.Ctx, url string, payload interface{}, method string) (
 
 	Authorization := c.GetReqHeaders()["Authorization"]
 	accessToken := Authorization[len(Authorization)-1][7:]
-	println(accessToken, "access token")
 
 	r.Header.Set("Content-Type", "application/json")
 	r.Header.Set("Authorization", "Bearer "+accessToken)
