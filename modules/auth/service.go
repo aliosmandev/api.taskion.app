@@ -4,12 +4,10 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
-	notionapi "taskmanager/utils/notion-api"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -34,9 +32,37 @@ func Me(c *fiber.Ctx) error {
 
 	var getUrl string = "https://api.notion.com/v1/users"
 
-	var responseBody, _ = notionapi.HttpRequest(c, getUrl, nil, "GET")
+	r, err := http.NewRequest("GET", getUrl, nil)
+	if err != nil {
+		return c.JSON(500, "error")
+	}
 
-	fmt.Println(responseBody)
+	Authorization := c.GetReqHeaders()["Authorization"]
+	accessToken := Authorization[len(Authorization)-1][7:]
+
+	r.Header.Set("Content-Type", "application/json")
+	r.Header.Set("Authorization", "Bearer "+accessToken)
+	r.Header.Set("Notion-Version", "2022-02-22")
+
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		return c.JSON(500, "error")
+	}
+	defer res.Body.Close()
+
+	bodyBytes, _ := io.ReadAll(res.Body)
+
+	if res.StatusCode != http.StatusOK {
+		return c.Status(res.StatusCode).JSON(string(bodyBytes))
+	}
+
+	var responseBody map[string]interface{}
+
+	err = json.Unmarshal(bodyBytes, &responseBody)
+	if err != nil {
+		return c.JSON(500, "error")
+	}
 
 	return c.JSON(responseBody)
 }

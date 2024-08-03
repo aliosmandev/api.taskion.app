@@ -16,8 +16,6 @@ func HttpRequest(c *fiber.Ctx, url string, payload interface{}, method string) (
 		return nil, c.Status(500).JSON(fiber.Map{"error": "Failed to marshal payload"})
 	}
 
-	fmt.Println(string(payloadJson))
-
 	buffer := bytes.NewBuffer(payloadJson)
 
 	fmt.Println(url, method)
