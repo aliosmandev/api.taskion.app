@@ -1,52 +1,18 @@
 package blocks
 
 import (
-	"bytes"
-	"encoding/json"
-	"io"
-	"net/http"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
+
+	notionapi "taskmanager/utils/notion-api"
 )
 
 func getBlocks(c *fiber.Ctx) error {
 
 	var pageId string = c.Params("pageId")
-
 	var getUrl string = "https://api.notion.com/v1/blocks/" + pageId + "/children?page_size=100"
 
-	r, err := http.NewRequest("GET", getUrl, nil)
-	if err != nil {
-		return c.JSON(500, "error")
-	}
-
-	Authorization := c.GetReqHeaders()["Authorization"]
-	accessToken := Authorization[len(Authorization)-1][7:]
-
-	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set("Authorization", "Bearer "+accessToken)
-	r.Header.Set("Notion-Version", "2022-02-22")
-
-	client := &http.Client{}
-	res, err := client.Do(r)
-	if err != nil {
-		return c.JSON(500, "error")
-	}
-	defer res.Body.Close()
-
-	bodyBytes, _ := io.ReadAll(res.Body)
-
-	if res.StatusCode != http.StatusOK {
-		return c.Status(res.StatusCode).JSON(string(bodyBytes))
-	}
-
-	var responseBody map[string]interface{}
-
-	err = json.Unmarshal(bodyBytes, &responseBody)
-	if err != nil {
-		return c.JSON(500, "error")
-	}
+	var responseBody, _ = notionapi.HttpRequest(c, getUrl, nil, "GET")
 
 	return c.JSON(responseBody)
 }
@@ -93,63 +59,13 @@ func createBlock(c *fiber.Ctx) error {
 		},
 	})
 
-	payloadJson, err := json.Marshal(requestPayload)
-	if err != nil {
-		return c.JSON(500, "error")
-	}
-
-	buffer := bytes.NewBuffer(payloadJson)
-
-	r, err := http.NewRequest("PATCH", postUrl, buffer)
-	if err != nil {
-		return c.JSON(500, "error")
-	}
-
-	Authorization := c.GetReqHeaders()["Authorization"]
-	accessToken := Authorization[len(Authorization)-1][7:]
-
-	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set("Authorization", "Bearer "+accessToken)
-	r.Header.Set("Notion-Version", "2022-02-22")
-
-	client := &http.Client{}
-	res, err := client.Do(r)
-	if err != nil {
-		return c.JSON(500, "error")
-	}
-	defer res.Body.Close()
-
-	bodyBytes, _ := io.ReadAll(res.Body)
-
-	if res.StatusCode != http.StatusOK {
-		return c.Status(res.StatusCode).JSON(string(bodyBytes))
-	}
-
-	var responseBody map[string]interface{}
-
-	err = json.Unmarshal(bodyBytes, &responseBody)
-	if err != nil {
-		return c.JSON(500, "error")
-	}
+	var responseBody, _ = notionapi.HttpRequest(c, postUrl, requestPayload, "POST")
 
 	return c.JSON(responseBody)
 }
 
 type UpdateText struct {
 	Content string `json:"content"`
-}
-
-type UpdateRichText struct {
-	Text UpdateText `json:"text"`
-}
-
-type UpdateToDo struct {
-	Checked  bool             `json:"checked"`
-	RichText []UpdateRichText `json:"rich_text"`
-}
-
-type UpdateBlockPayload struct {
-	ToDo UpdateToDo `json:"to_do"`
 }
 
 func updateBlock(c *fiber.Ctx) error {
@@ -175,44 +91,7 @@ func updateBlock(c *fiber.Ctx) error {
 		},
 	}
 
-	payloadJson, err := json.Marshal(requestPayload)
-	if err != nil {
-		return c.JSON(500, "error")
-	}
-
-	buffer := bytes.NewBuffer(payloadJson)
-
-	r, err := http.NewRequest("PATCH", updateUrl, buffer)
-	if err != nil {
-		return c.JSON(500, "error")
-	}
-
-	Authorization := c.GetReqHeaders()["Authorization"]
-	accessToken := Authorization[len(Authorization)-1][7:]
-
-	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set("Authorization", "Bearer "+accessToken)
-	r.Header.Set("Notion-Version", "2022-02-22")
-
-	client := &http.Client{}
-	res, err := client.Do(r)
-	if err != nil {
-		return c.JSON(500, "error")
-	}
-	defer res.Body.Close()
-
-	bodyBytes, _ := io.ReadAll(res.Body)
-
-	if res.StatusCode != http.StatusOK {
-		return c.Status(res.StatusCode).JSON(string(bodyBytes))
-	}
-
-	var responseBody map[string]interface{}
-
-	err = json.Unmarshal(bodyBytes, &responseBody)
-	if err != nil {
-		return c.JSON(500, "error")
-	}
+	var responseBody, _ = notionapi.HttpRequest(c, updateUrl, requestPayload, "PATCH")
 
 	return c.JSON(responseBody)
 }
@@ -222,37 +101,7 @@ func deleteBlock(c *fiber.Ctx) error {
 
 	var deleteUrl string = "https://api.notion.com/v1/blocks/" + blockId
 
-	r, err := http.NewRequest("DELETE", deleteUrl, nil)
-	if err != nil {
-		return c.JSON(500, "error")
-	}
-
-	Authorization := c.GetReqHeaders()["Authorization"]
-	accessToken := Authorization[len(Authorization)-1][7:]
-
-	r.Header.Set("Content-Type", "application/json")
-	r.Header.Set("Authorization", "Bearer "+accessToken)
-	r.Header.Set("Notion-Version", "2022-02-22")
-
-	client := &http.Client{}
-	res, err := client.Do(r)
-	if err != nil {
-		return c.JSON(500, "error")
-	}
-	defer res.Body.Close()
-
-	bodyBytes, _ := io.ReadAll(res.Body)
-
-	if res.StatusCode != http.StatusOK {
-		return c.Status(res.StatusCode).JSON(string(bodyBytes))
-	}
-
-	var responseBody map[string]interface{}
-
-	err = json.Unmarshal(bodyBytes, &responseBody)
-	if err != nil {
-		return c.JSON(500, "error")
-	}
+	var responseBody, _ = notionapi.HttpRequest(c, deleteUrl, nil, "DELETE")
 
 	return c.JSON(responseBody)
 }

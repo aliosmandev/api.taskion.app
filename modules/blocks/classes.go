@@ -49,3 +49,16 @@ type Block struct {
 type NotionBlock struct {
 	Children []Block `json:"children"`
 }
+
+type UpdateRichText struct {
+	Text UpdateText `json:"text"`
+}
+
+type UpdateToDo struct {
+	Checked  bool             `json:"checked"`
+	RichText []UpdateRichText `json:"rich_text"`
+}
+
+type UpdateBlockPayload struct {
+	ToDo UpdateToDo `json:"to_do"`
+}
